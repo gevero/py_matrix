@@ -351,6 +351,7 @@ def RT(wl,theta0,phi0,e_list,d_list):
 	#print "k0*n0",'%.14e    %.14e' % (k0*n0.real,k0*n0.imag)
 	#print "kx",'%.14e    %.14e' % (kx.real,kx.imag)
 	#print "ky",'%.14e    %.14e' % (ky.real,ky.imag)
+	#print
 
 	#------kz,v_e and boundary and propagation matrix for R and T------
 	m_a12=np.zeros((len(e_list),2,2),dtype=np.complex128);m_a34=np.zeros_like(m_a12);
