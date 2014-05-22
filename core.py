@@ -1,3 +1,17 @@
+'''core.py This module contains the core routine for the solution of the transfer matrix
+    problem of a multilayer with arbitrary dielectric tensors. for information about each
+    function see the docstrings.
+
+    The most two important functions are:
+
+    rt(...) -- Calculates reflection and transmission quantities for a multilayer
+    structure with a general dielectric tensors
+
+    moe_rt(...) -- Calculates reflection and transmission matrix for an isotropic multilayer
+    with off diagonal components corresponding to:
+    e_xy=-e_yx!=0        Polar Kerr or Faraday effect (mo_flag='pp')
+    e_xz=-e_zx!=0        Transverse Kerr or Faraday effect (mo_flag='tt')
+    e_yz=-e_zy!=0        Longitudinal  Kerr or Faraday effect (mo_flag='ll')'''
 import numpy as np
 import scipy as sp
 
