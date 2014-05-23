@@ -1,4 +1,4 @@
-'''materials.py contains subroutines to create, tabulate and manipulate optical constants'''
+'''mat.py contains subroutines to create, tabulate and manipulate optical constants'''
 
 import numpy as np
 import numpy.linalg as np_l
@@ -53,6 +53,12 @@ def generate_eps_db(path_to_eps,ext="*.edb"):
     eps_db = {}
     for eps_name,eps_file in zip(eps_names,eps_files):
         eps_db[eps_name] = import_eps(eps_file)
+
+    eps_dict = {'eps_files':eps_files,
+                'eps_names':eps_names,
+                'eps_db':eps_db}
+
+    return eps_dict
 
 
 def db_to_eps(wl,eps_db,eps_list):
