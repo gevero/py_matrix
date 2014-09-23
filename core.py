@@ -207,7 +207,7 @@ def kz_eigenvectors(k0,kx,ky,v_kz,m_eps):
             v_kz[0] = v_kz[1].copy()
             v_kz[1] = swap_kz.copy()
 
-        elif np.abs(v_e[2,0]) == 0.0:
+        if np.abs(v_e[2,0]) == 0.0:
             swap_e = v_e[2,:].copy()
             v_e[2,:] = v_e[3,:].copy()
             v_e[3,:] = swap_e.copy()
@@ -255,6 +255,10 @@ def m_abc(k0,kx,ky,v_kz,v_e,d):
     m_a12[1,0] = a1
 
     # a34 matrix
+    # print("v_e[2,1]",v_e[2,1])
+    # print("v_e[2,0]",v_e[2,0])
+    # print("np.abs(v_e[2,0])",np.abs(v_e[2,0]))
+    # print("v_e[2,1]/v_e[2,0]",v_e[2,1]/v_e[2,0])
     a3 = v_e[2,1]/v_e[2,0]
     a4 = v_e[3,0]/v_e[3,1]
     m_a34[0,1] = a4
@@ -349,6 +353,7 @@ def rt(wl,theta_0,phi_0,e_list_3x3,d_list):
     for n in range(len(e_list_3x3)):
         v_kz = kz_eigenvalues(k0,kx,ky,e_list_3x3[n])
         v_e,v_kz = kz_eigenvectors(k0,kx,ky,v_kz,e_list_3x3[n])
+        # print(n,v_e)
         m_a12[n],m_a34[n],m_b12[n],m_b34[n],m_c12[n],m_c34[n] = m_abc(k0,kx,ky,
                                                                       v_kz,v_e,
                                                                       d_list[n]
@@ -468,7 +473,7 @@ def mo_rt(wl,theta_0,phi_0,e_list,e_list_off,d_list,mo_flag):
     '''
 
     # filling the dielectric tensor depending on mo_flag
-    e_list_3x3 = np.zeros((len(e_list,3,3)),dtype=np.complex128)
+    e_list_3x3 = np.zeros((len(e_list),3,3),dtype=np.complex128)
     e_list_3x3[:,0,0] = e_list
     e_list_3x3[:,1,1] = e_list
     e_list_3x3[:,2,2] = e_list
@@ -477,17 +482,17 @@ def mo_rt(wl,theta_0,phi_0,e_list,e_list_off,d_list,mo_flag):
         e_list_3x3[:,1,0] = -e_list_off
     elif mo_flag == 'tt':
         e_list_3x3[:,0,2] = e_list_off
-        e_list_3x3[:,2,0] = e_list_off
+        e_list_3x3[:,2,0] = -e_list_off
     elif mo_flag == 'll':
         e_list_3x3[:,1,2] = e_list_off
-        e_list_3x3[:,2,1] = e_list_off
+        e_list_3x3[:,2,1] = -e_list_off
     else:
         raise Exception("mo_flag must be either 'pp', 'tt' or 'll'...")
 
     # computing reflection and transmission matrix
     rt_out = rt(wl,theta_0,phi_0,e_list_3x3,d_list)
     m_r_ps = rt_out['m_r_ps']
-    m_t_ps = rt_out['m_t_sp']
+    m_t_ps = rt_out['m_t_ps']
 
     # Output in the for of a dictionary
     return {'m_r_ps':m_r_ps, 'm_t_ps':m_t_ps,

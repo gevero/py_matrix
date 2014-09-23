@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 '''moe.py - mAGNETO oPTICS eLLIPSOID - contains subroutines to solve the
 problem for a MO ellipsoid of a size comparable with the wavelength.
 The code is inspired by the following paper:
