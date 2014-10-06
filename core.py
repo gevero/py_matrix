@@ -142,14 +142,12 @@ def kz_eigenvalues(k0, kx, ky, m_eps):
     return v_kz[np.argsort(np.imag(v_kz))]
 
 
-def kz_eigenvectors(k0,theta_0,phi_0,kx,ky,v_kz,m_eps):
+def kz_eigenvectors(k0,kx,ky,v_kz,m_eps):
     '''Calculates the kz field eigenvectors from the characteristic equation.
 
     Parameters
     ----------
     'ko'= vacuum wavevector
-    'theta_0,phi_0'= polar and azimuth angles as defined in Mansuripur
-                     JAP 67(10)
     'kx,ky'= in plane wavevector components
     'v_kz'= off plane wavevector components
     'm_eps'= 3x3 complex dielectric tensor
@@ -171,15 +169,33 @@ def kz_eigenvectors(k0,theta_0,phi_0,kx,ky,v_kz,m_eps):
     # diagonal isotropic material
     if diag_flag and iso_flag:
 
-        e_px = -np.cos(theta_0)*np.cos(phi_0)
-        e_py = -np.cos(theta_0)*np.sin(phi_0)
-        e_pz = np.sin(theta_0)
-        e_sx = -np.sin(phi_0)
-        e_sy = np.cos(phi_0)
-        v_e[0,:] = np.array([e_px,e_py,e_pz])
-        v_e[1,:] = np.array([e_sx,e_sy,0.0])
-        v_e[2,:] = np.array([e_px,e_py,e_pz])
-        v_e[3,:] = np.array([e_sx,e_sy,0.0])
+        if kx == 0.0 and ky == 0.0:
+
+            v_e[0,:] = np.array([1.0,0.0,0.0])
+            v_e[1,:] = np.array([0.0,1.0,0.0])
+            v_e[2,:] = np.array([1.0,0.0,0.0])
+            v_e[3,:] = np.array([0.0,1.0,0.0])
+
+        elif kx == 0.0:
+
+            v_e[0,:] = np.array([1.0,0.0,0.0])
+            v_e[1,:] = np.array([0.0,-v_kz[1],ky])
+            v_e[2,:] = np.array([1.0,0.0,0.0])
+            v_e[3,:] = np.array([0.0,-v_kz[3],ky])
+
+        elif ky == 0.0:
+
+            v_e[0,:] = np.array([-v_kz[1],0.0,kx])
+            v_e[1,:] = np.array([0.0,1.0,0.0])
+            v_e[2,:] = np.array([-v_kz[3],0.0,kx])
+            v_e[3,:] = np.array([0.0,1.0,0.0])
+
+        else:
+
+            v_e[0,:] = np.array([-v_kz[1],0.0,kx])
+            v_e[1,:] = np.array([-ky,kx,0.0])
+            v_e[2,:] = np.array([-v_kz[3],0.0,kx])
+            v_e[3,:] = np.array([-ky,kx,0.0])
 
     # general material
     else:
@@ -359,7 +375,7 @@ def rt(wl,theta_0,phi_0,e_list_3x3,d_list):
 
     for n in range(len(e_list_3x3)):
         v_kz = kz_eigenvalues(k0,kx,ky,e_list_3x3[n])
-        v_e,v_kz = kz_eigenvectors(k0,theta_0,phi_0,kx,ky,v_kz,e_list_3x3[n])
+        v_e,v_kz = kz_eigenvectors(k0,kx,ky,v_kz,e_list_3x3[n])
         # print(n,v_e)
         m_a12[n],m_a34[n],m_b12[n],m_b34[n],m_c12[n],m_c34[n] = m_abc(k0,kx,ky,
                                                                       v_kz,v_e,
