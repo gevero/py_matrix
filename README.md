@@ -1,5 +1,6 @@
 # py_matrix
 
+![](https://github.com/gevero/py_matrix/tree/master/images/multilayer.png)
 
 A python implementation of the transfer matrix method for multilayer structures with arbitrary dielectric tensors. If you find py-matrix useful for generating results included in publications, please consider citing the following paper:
 

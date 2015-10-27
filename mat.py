@@ -148,11 +148,8 @@ def eps_corr_drude(wl,w_p,gamma_inf,vf,r):
     h_bar = 6.58211928e-16  # h_bar eV
     gamma_r = gamma_inf+h_bar*vf/(r*1e-9)
     w = 1240.0/wl  # nm to eV
-    eps_r_1 = (w_p**2)*(1.0/(w**2+gamma_inf**2)-1.0/(w**2+gamma_r**2))
-    eps_r_2 = ((w_p**2/w)*(gamma_r/(w**2+gamma_r**2) -
-               gamma_inf/(w**2+gamma_inf**2)))
 
-    eps_r = eps_r_1+1j*eps_r_2
+    eps_r = (w_p**2)/(w**2 + 1j*w*gamma_inf) - (w_p**2)/(w**2 + 1j*w*gamma_r)
 
     return eps_r
 
