@@ -17,6 +17,8 @@ information about each function see the docstrings.
 import numpy as np
 import scipy as sp
 import scipy.linalg as sp_la
+# import warnings
+# warnings.filterwarnings('error')
 
 
 def nullspace(A, atol=1e-9):
@@ -49,6 +51,9 @@ def nullspace(A, atol=1e-9):
 
     # singular value decomposition
     u, s, vh = sp_la.svd(A)
+    # print("A",A)
+    # print("s",s)
+    # print("vh",vh)
     null_mask = (s <= atol)
     null_space = sp.compress(null_mask, vh, axis=0)
     return sp.transpose(null_space)
@@ -56,7 +61,8 @@ def nullspace(A, atol=1e-9):
 
 def kz_eigenvalues(k0, kx, ky, m_eps):
 
-    '''Calculates the kz from the characteristic equation.
+    '''Calculates the kz from the characteristic equation using a companion
+    matrix method.
 
     Parameters
     ----------
@@ -78,7 +84,7 @@ def kz_eigenvalues(k0, kx, ky, m_eps):
 
     # diagonal isotropic material
     if diag_flag and iso_flag:
-        kz = np.sqrt((k0**2)*m_eps[0,0] - kx**2 - ky**2)
+        kz = np.sqrt((k0**2)*m_eps[0,0] - kx**2 - ky**2+0j)
         v_kz[0:2] = -kz
         v_kz[2:4] = kz
 
@@ -137,8 +143,13 @@ def kz_eigenvalues(k0, kx, ky, m_eps):
 
         # eigenvalues
         v_kz = k0*np.linalg.eigvals(m_comp)
+        # print v_kz[np.argsort(np.imag(v_kz))][0], \
+        # v_kz[np.argsort(np.imag(v_kz))][1], \
+        # v_kz[np.argsort(np.imag(v_kz))][2], \
+        # v_kz[np.argsort(np.imag(v_kz))][3]
 
     # output sorted by imaginary part
+    # print("eigen",v_kz[np.argsort(np.imag(v_kz))])
     return v_kz[np.argsort(np.imag(v_kz))]
 
 
@@ -218,8 +229,15 @@ def kz_eigenvectors(k0,kx,ky,v_kz,m_eps):
             m_char = m_char+m_eps
 
             # Calculating the null space
-            null_space = nullspace(m_char,atol=1e-8)
+            # print("m",m)
+            null_space = nullspace(m_char,atol=1e-7)
             v_e[m,:] = null_space[:,0]
+
+        # cleaning small elements from the eigenvectors
+        for m in range(4):
+            max_e = np.abs(v_e[m,:]).max()
+            v_e_rel = np.abs(v_e[m,:]) / max_e
+            v_e[m,v_e_rel < 1.e-12] = 0.0
 
         # eigenvector swapping to get appropriate polarization states
         if np.abs(v_e[0,0]) == 0.0:
