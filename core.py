@@ -329,12 +329,16 @@ def m_abc(k0,kx,ky,v_kz,v_e,d):
     m_c34[0,0] = np.exp(1j*v_kz[2]*d)
     m_c34[1,1] = np.exp(1j*v_kz[3]*d)
 
-    return m_a12,m_a34,m_b12,m_b34,m_c12,m_c34
+    # pure coefficient vectors
+    v_a = np.array([a1,a2,a3,a4])
+    v_b = np.array([b1,b2,b3,b4])
+
+    return v_a,v_b,m_a12,m_a34,m_b12,m_b34,m_c12,m_c34
 
 
 def rt(wl,theta_0,phi_0,e_list_3x3,d_list):
-    '''Calculates reflection and transmission quantities for a multilayer
-       structure with a general dielectric tensors
+    '''Calculates reflection matrix, transmission matrix and field amplitudes for a
+       multilayer structure with a general dielectric tensors
 
     Parameters
     ----------
@@ -356,6 +360,9 @@ def rt(wl,theta_0,phi_0,e_list_3x3,d_list):
     -------
     'a dictionary'= {'m_r_ps':m_r_ps,  #reflection matrix
                      'm_t_ps':m_t_ps,  #transmission matrix
+                     'm_Kn':m_Kn, # wavevectors (n_layers,n_k,n_xyz)
+                     'm_En':m_En, # electric field amplitudes (n_layers,n_k,n_xyz,n_pol)
+                     'm_Hn':m_Hn, # magnetic field amplitudes (n_layers,n_k,n_xyz,n_pol)
                      'wl': wl,'theta_0': theta_0,'phi_0': phi_0,  #inputs
                      'e_list_3x3': e_list_3x3,'d_list': d_list}   #inputs
     '''
@@ -390,15 +397,24 @@ def rt(wl,theta_0,phi_0,e_list_3x3,d_list):
     m_b34 = np.zeros_like(m_a12)
     m_c12 = np.zeros_like(m_a12)
     m_c34 = np.zeros_like(m_a12)
+    m_a = np.zeros((len(e_list_3x3),4),dtype=np.complex128)
+    m_b = np.zeros_like(m_a)
+    m_Kn = np.zeros((len(e_list_3x3),4,3),dtype=np.complex128)
 
     for n in range(len(e_list_3x3)):
         v_kz = kz_eigenvalues(k0,kx,ky,e_list_3x3[n])
         v_e,v_kz = kz_eigenvectors(k0,kx,ky,v_kz,e_list_3x3[n])
+
+        # storing the wavevectors
+        m_Kn[n,:,0] = kx  # kx
+        m_Kn[n,:,1] = ky  # ky
+        m_Kn[n,:,2] = v_kz  # kz
+
         # print(n,v_e)
-        m_a12[n],m_a34[n],m_b12[n],m_b34[n],m_c12[n],m_c34[n] = m_abc(k0,kx,ky,
-                                                                      v_kz,v_e,
-                                                                      d_list[n]
-                                                                      )
+        m_a[n],m_b[n],m_a12[n],m_a34[n],m_b12[n],m_b34[n],m_c12[n],m_c34[n] = m_abc(k0,kx,ky,
+                                                                                    v_kz,v_e,
+                                                                                    d_list[n]
+                                                                                    )
 
     # looping for R over the layers
     m_R = np.zeros_like(m_c12)
@@ -464,8 +480,113 @@ def rt(wl,theta_0,phi_0,e_list_3x3,d_list):
     # Finally the  T matrix output...
     m_t_ps = np.dot(np.dot(p_sub_inv,m_T),p_inc)
 
+    # initializing the fields
+    m_En = np.zeros((len(e_list_3x3),4,3,2),dtype=np.complex128)
+    m_Hn = np.zeros_like(m_En)
+    m_En[0,1,1,0] = 1.0  # TE polarization
+    m_En[0,0,0,1] = -np.cos(theta_0)  # TM polarization
+
+    # loop over all layers
+    for n in range(len(e_list_3x3)):
+
+        # forward electric and magnetic fields in the i_th layer
+
+        # Ey1 Ez1
+        m_En[n,0,1,0] = m_a[n,0]*m_En[n,0,0,0]  # TE
+        m_En[n,0,2,0] = m_b[n,0]*m_En[n,0,0,0]
+        m_En[n,0,1,1] = m_a[n,0]*m_En[n,0,0,1]  # TM
+        m_En[n,0,2,1] = m_b[n,0]*m_En[n,0,0,1]
+
+        # Ex2 Ez2
+        # m_En(i,2,1)=v_a2(i)*m_En(i,2,2)
+        # m_En(i,2,3)=v_b2(i)*m_En(i,2,2)
+        m_En[n,1,0,0] = m_a[n,1]*m_En[n,1,1,0]  # TE
+        m_En[n,1,2,0] = m_b[n,1]*m_En[n,1,1,0]
+        m_En[n,1,0,1] = m_a[n,1]*m_En[n,1,1,1]  # TM
+        m_En[n,1,2,1] = m_b[n,1]*m_En[n,1,1,1]
+
+        # Hx1 Hy1 Hz1
+        m_Hn[n,0,0,0] = m_b12[n,0,0]*m_En[n,0,0,0]/k0  # TE
+        m_Hn[n,0,1,0] = m_b12[n,1,0]*m_En[n,0,0,0]/k0
+        m_Hn[n,0,2,0] = (-ky+kx*m_a[n,0])*m_En[n,0,0,0]/k0
+        m_Hn[n,0,0,1] = m_b12[n,0,0]*m_En[n,0,0,1]/k0  # TM
+        m_Hn[n,0,1,1] = m_b12[n,1,0]*m_En[n,0,0,1]/k0
+        m_Hn[n,0,2,1] = (-ky+kx*m_a[n,0])*m_En[n,0,0,1]/k0
+
+        # Hx2 Hy2 Hz2
+        m_Hn[n,1,0,0] = m_b12[n,0,1]*m_En[n,1,1,0]/k0  # TE
+        m_Hn[n,1,1,0] = m_b12[n,1,1]*m_En[n,1,1,0]/k0
+        m_Hn[n,1,2,0] = (-ky*m_a[n,1]+kx)*m_En[n,1,1,0]/k0
+        m_Hn[n,1,0,1] = m_b12[n,0,1]*m_En[n,1,1,1]/k0  # TM
+        m_Hn[n,1,1,1] = m_b12[n,1,1]*m_En[n,1,1,1]/k0
+        m_Hn[n,1,2,1] = (-ky*m_a[n,1]+kx)*m_En[n,1,1,1]/k0
+
+        # exiting one before the last, because then I have no backpropagation
+        if n == len(e_list_3x3)-1:
+            break
+
+        # backward electric and magnetic fields in the i_th layer
+
+        # Ex3 Ey4
+        m_En[n,2,0,0] = m_R[n,0,0]*m_En[n,0,0,0]+m_R[n,0,1]*m_En[n,1,1,0]  # TE
+        m_En[n,3,1,0] = m_R[n,1,0]*m_En[n,0,0,0]+m_R[n,1,1]*m_En[n,1,1,0]
+        m_En[n,2,0,1] = m_R[n,0,0]*m_En[n,0,0,1]+m_R[n,0,1]*m_En[n,1,1,1]  # TM
+        m_En[n,3,1,1] = m_R[n,1,0]*m_En[n,0,0,1]+m_R[n,1,1]*m_En[n,1,1,1]
+
+        # Ey3 Ez3
+        # m_En(i,3,2)=v_a3(i)*m_En(i,3,1)
+        # m_En(i,3,3)=v_b3(i)*m_En(i,3,1)
+        m_En[n,2,1,0] = m_a[n,2]*m_En[n,2,0,0]
+        m_En[n,2,2,0] = m_b[n,2]*m_En[n,2,0,0]
+        m_En[n,2,1,1] = m_a[n,2]*m_En[n,2,0,1]
+        m_En[n,2,2,1] = m_b[n,2]*m_En[n,2,0,1]
+
+        # Ex4 Ez4
+        # m_En(i,4,1)=v_a4(i)*m_En(i,4,2)
+        # m_En(i,4,3)=v_b4(i)*m_En(i,4,2)
+        m_En[n,3,0,0] = m_a[n,3]*m_En[n,3,1,0]
+        m_En[n,3,2,0] = m_b[n,3]*m_En[n,3,1,0]
+        m_En[n,3,0,1] = m_a[n,3]*m_En[n,3,1,1]
+        m_En[n,3,2,1] = m_b[n,3]*m_En[n,3,1,1]
+
+        # Hx3 Hy3 Hz3
+        m_Hn[n,2,0,0] = m_b34[n,0,0]*m_En[n,2,0,0]/k0  # TE
+        m_Hn[n,2,1,0] = m_b34[n,1,0]*m_En[n,2,0,0]/k0
+        m_Hn[n,2,2,0] = (-ky+kx*m_a[n,2])*m_En[n,2,0,0]/k0
+        m_Hn[n,2,0,1] = m_b34[n,0,0]*m_En[n,2,0,1]/k0  # TM
+        m_Hn[n,2,1,1] = m_b34[n,1,0]*m_En[n,2,0,1]/k0
+        m_Hn[n,2,2,1] = (-ky+kx*m_a[n,2])*m_En[n,2,0,1]/k0
+
+        # Hx4 Hy4 Hz4
+        # m_Hn(i,4,1)=m_b34(i,1,2)*m_En(i,4,2)/k0
+        # m_Hn(i,4,2)=m_b34(i,2,2)*m_En(i,4,2)/k0
+        # m_Hn(i,4,3)=(-ky*v_a4(i)+kx)*m_En(i,4,2)/k0
+        m_Hn[n,3,0,0] = m_b34[n,0,1]*m_En[n,3,1,0]/k0  # TE
+        m_Hn[n,3,1,0] = m_b34[n,1,1]*m_En[n,3,1,0]/k0
+        m_Hn[n,3,2,0] = (-ky*m_a[n,3]+kx)*m_En[n,3,1,0]/k0
+        m_Hn[n,3,0,1] = m_b34[n,0,1]*m_En[n,3,1,1]/k0  # TM
+        m_Hn[n,3,1,1] = m_b34[n,1,1]*m_En[n,3,1,1]/k0
+        m_Hn[n,3,2,1] = (-ky*m_a[n,3]+kx)*m_En[n,3,1,1]/k0
+
+        # Ex1 Ey2 n_th+1 layer
+        # m_En(i+1,1,1)=m_T(i,1,1)*m_En(i,1,1)+m_T(i,1,2)*m_En(i,2,2)
+        # m_En(i+1,2,2)=m_T(i,2,1)*m_En(i,1,1)+m_T(i,2,2)*m_En(i,2,2)
+        m_En[n+1,0,0,0] = m_Tn[n,0,0]*m_En[n,0,0,0]+m_Tn[n,0,1]*m_En[n,1,1,0]  # TE
+        m_En[n+1,1,1,0] = m_Tn[n,1,0]*m_En[n,0,0,0]+m_Tn[n,1,1]*m_En[n,1,1,0]
+        m_En[n+1,0,0,1] = m_Tn[n,0,0]*m_En[n,0,0,1]+m_Tn[n,0,1]*m_En[n,1,1,1]  # TM
+        m_En[n+1,1,1,1] = m_Tn[n,1,0]*m_En[n,0,0,1]+m_Tn[n,1,1]*m_En[n,1,1,1]
+
+    # flipping the x and z coordinates for the right reference frame
+    m_Kn[:,:,0] = -m_Kn[:,:,0]
+    m_Kn[:,:,2] = -m_Kn[:,:,2]
+    m_En[:,:,0] = -m_En[:,:,0]
+    m_En[:,:,2] = -m_En[:,:,2]
+    m_Hn[:,:,0] = -m_Hn[:,:,0]
+    m_Hn[:,:,2] = -m_Hn[:,:,2]
+
     # Output in a for of a dictionary-
     return {'m_r_ps':m_r_ps, 'm_t_ps':m_t_ps,
+            'm_Kn':m_Kn,'m_En':m_En,'m_Hn':m_Hn,
             'wl': wl,'theta_0': theta_0,'phi_0': phi_0,
             'e_list_3x3': e_list_3x3,'d_list': d_list}
 
