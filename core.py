@@ -51,9 +51,6 @@ def nullspace(A, atol=1e-9):
 
     # singular value decomposition
     u, s, vh = sp_la.svd(A)
-    # print("A",A)
-    # print("s",s)
-    # print("vh",vh)
     null_mask = (s <= atol)
     null_space = sp.compress(null_mask, vh, axis=0)
     return sp.transpose(null_space)
@@ -143,13 +140,8 @@ def kz_eigenvalues(k0, kx, ky, m_eps):
 
         # eigenvalues
         v_kz = k0*np.linalg.eigvals(m_comp)
-        # print v_kz[np.argsort(np.imag(v_kz))][0], \
-        # v_kz[np.argsort(np.imag(v_kz))][1], \
-        # v_kz[np.argsort(np.imag(v_kz))][2], \
-        # v_kz[np.argsort(np.imag(v_kz))][3]
 
     # output sorted by imaginary part
-    # print("eigen",v_kz[np.argsort(np.imag(v_kz))])
     return v_kz[np.argsort(np.imag(v_kz))]
 
 
@@ -229,7 +221,6 @@ def kz_eigenvectors(k0,kx,ky,v_kz,m_eps):
             m_char = m_char+m_eps
 
             # Calculating the null space
-            # print("m",m)
             null_space = nullspace(m_char,atol=1e-7)
             v_e[m,:] = null_space[:,0]
 
@@ -296,10 +287,6 @@ def m_abc(k0,kx,ky,v_kz,v_e,d):
     m_a12[1,0] = a1
 
     # a34 matrix
-    # print("v_e[2,1]",v_e[2,1])
-    # print("v_e[2,0]",v_e[2,0])
-    # print("np.abs(v_e[2,0])",np.abs(v_e[2,0]))
-    # print("v_e[2,1]/v_e[2,0]",v_e[2,1]/v_e[2,0])
     a3 = v_e[2,1]/v_e[2,0]
     a4 = v_e[3,0]/v_e[3,1]
     m_a34[0,1] = a4
@@ -498,8 +485,6 @@ def rt(wl,theta_0,phi_0,e_list_3x3,d_list):
         m_En[n,0,2,1] = m_b[n,0]*m_En[n,0,0,1]
 
         # Ex2 Ez2
-        # m_En(i,2,1)=v_a2(i)*m_En(i,2,2)
-        # m_En(i,2,3)=v_b2(i)*m_En(i,2,2)
         m_En[n,1,0,0] = m_a[n,1]*m_En[n,1,1,0]  # TE
         m_En[n,1,2,0] = m_b[n,1]*m_En[n,1,1,0]
         m_En[n,1,0,1] = m_a[n,1]*m_En[n,1,1,1]  # TM
@@ -534,16 +519,12 @@ def rt(wl,theta_0,phi_0,e_list_3x3,d_list):
         m_En[n,3,1,1] = m_R[n,1,0]*m_En[n,0,0,1]+m_R[n,1,1]*m_En[n,1,1,1]
 
         # Ey3 Ez3
-        # m_En(i,3,2)=v_a3(i)*m_En(i,3,1)
-        # m_En(i,3,3)=v_b3(i)*m_En(i,3,1)
         m_En[n,2,1,0] = m_a[n,2]*m_En[n,2,0,0]
         m_En[n,2,2,0] = m_b[n,2]*m_En[n,2,0,0]
         m_En[n,2,1,1] = m_a[n,2]*m_En[n,2,0,1]
         m_En[n,2,2,1] = m_b[n,2]*m_En[n,2,0,1]
 
         # Ex4 Ez4
-        # m_En(i,4,1)=v_a4(i)*m_En(i,4,2)
-        # m_En(i,4,3)=v_b4(i)*m_En(i,4,2)
         m_En[n,3,0,0] = m_a[n,3]*m_En[n,3,1,0]
         m_En[n,3,2,0] = m_b[n,3]*m_En[n,3,1,0]
         m_En[n,3,0,1] = m_a[n,3]*m_En[n,3,1,1]
@@ -558,9 +539,6 @@ def rt(wl,theta_0,phi_0,e_list_3x3,d_list):
         m_Hn[n,2,2,1] = (-ky+kx*m_a[n,2])*m_En[n,2,0,1]/k0
 
         # Hx4 Hy4 Hz4
-        # m_Hn(i,4,1)=m_b34(i,1,2)*m_En(i,4,2)/k0
-        # m_Hn(i,4,2)=m_b34(i,2,2)*m_En(i,4,2)/k0
-        # m_Hn(i,4,3)=(-ky*v_a4(i)+kx)*m_En(i,4,2)/k0
         m_Hn[n,3,0,0] = m_b34[n,0,1]*m_En[n,3,1,0]/k0  # TE
         m_Hn[n,3,1,0] = m_b34[n,1,1]*m_En[n,3,1,0]/k0
         m_Hn[n,3,2,0] = (-ky*m_a[n,3]+kx)*m_En[n,3,1,0]/k0
@@ -569,8 +547,6 @@ def rt(wl,theta_0,phi_0,e_list_3x3,d_list):
         m_Hn[n,3,2,1] = (-ky*m_a[n,3]+kx)*m_En[n,3,1,1]/k0
 
         # Ex1 Ey2 n_th+1 layer
-        # m_En(i+1,1,1)=m_T(i,1,1)*m_En(i,1,1)+m_T(i,1,2)*m_En(i,2,2)
-        # m_En(i+1,2,2)=m_T(i,2,1)*m_En(i,1,1)+m_T(i,2,2)*m_En(i,2,2)
         m_En[n+1,0,0,0] = m_Tn[n,0,0]*m_En[n,0,0,0]+m_Tn[n,0,1]*m_En[n,1,1,0]  # TE
         m_En[n+1,1,1,0] = m_Tn[n,1,0]*m_En[n,0,0,0]+m_Tn[n,1,1]*m_En[n,1,1,0]
         m_En[n+1,0,0,1] = m_Tn[n,0,0]*m_En[n,0,0,1]+m_Tn[n,0,1]*m_En[n,1,1,1]  # TM
