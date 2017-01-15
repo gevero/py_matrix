@@ -1,8 +1,10 @@
+.*
+!/.gitignore
 *.pyc
 *.sublime-workspace
 *.sublime-project
 .ipynb_checkpoints
-py_matrix/examples/.ipynb_checkpoints/*.ipynb
+/py_matrix/examples/.ipynb_checkpoints/*
 /#mat.pyc#
 /mat.py~
 /materials/.directory
