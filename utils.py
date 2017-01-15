@@ -1,6 +1,6 @@
 import numpy as np
 import scipy as sp
-
+z0 = sp.constants.value('characteristic impedance of vacuum')
 
 def rot_ell(m_rt_ps):
     '''Utility to compute rotation and ellipticity
@@ -205,7 +205,8 @@ def field(m_K,m_E,m_H,e_list_3x3,d_list,x,y,z,pol):
                                                                   m_K[n_l,m,1]*y +
                                                                   m_K[n_l,m,2]*(z-z_n)))
 
-    v_S = 0.5*np.real(np.cross(v_E,np.conj(v_H)))
-    absor = 0.5*np.real(np.cross(v_dE,np.conj(v_H)))[2]+0.5*np.real(np.cross(v_E,np.conj(v_dH)))[2]
+    v_S = 0.5*np.real(np.cross(v_E,np.conj(v_H/z0)))
+    I_abs = (0.5*np.real(np.cross(v_dE,np.conj(v_H/z0)))[2]+
+             0.5*np.real(np.cross(v_E,np.conj(v_dH/z0)))[2])
 
-    return {'E': v_E, 'H': v_H,'S': v_S,'normE': np.linalg.norm(v_E), 'normH': np.linalg.norm(v_H),'normS': np.linalg.norm(v_S),'absor':absor}
+    return {'E': v_E, 'H': v_H,'S': v_S,'normE': np.linalg.norm(v_E), 'normH': np.linalg.norm(v_H),'normS': np.linalg.norm(v_S),'abs':I_abs}

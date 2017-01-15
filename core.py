@@ -17,9 +17,6 @@ information about each function see the docstrings.
 import numpy as np
 import scipy as sp
 import scipy.linalg as sp_la
-# import warnings
-# warnings.filterwarnings('error')
-
 
 def nullspace(A, atol=1e-9):
     '''Compute an approximate basis for the nullspace of A using the singular
