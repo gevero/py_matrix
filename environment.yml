@@ -1,6 +1,3 @@
-name: binder
-channels: !!python/tuple
-- defaults
 dependencies:
 - _license=1.1=py35_1
 - _nb_ext_conf=0.3.0=py35_0
@@ -222,4 +219,3 @@ dependencies:
   - rope-py3k==0.9.4.post1
   - ruamel-yaml-==VERSION
 prefix: /opt/anaconda3
-
