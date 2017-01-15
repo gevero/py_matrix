@@ -1,4 +1,4 @@
-name: root
+name: binder
 channels: !!python/tuple
 - defaults
 dependencies:
