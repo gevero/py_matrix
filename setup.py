@@ -3,12 +3,12 @@ from setuptools import setup
 
 # Utility function to read the README file.
 def readme():
-    with open('README.md') as f:
+    with open('README.rst') as f:
         return f.read()
 
 descrip = ("A transfer matrix code for anysotropic multilayers")
 
-data_files = ['README.md','LICENSE.txt','Changes.txt','manual.pdf','examples.ipynb']
+data_files = ['README.rst','README.md','LICENSE.txt','Changes.txt','manual.pdf','examples.ipynb']
 
 setup(
     name = "py_matrix",
