@@ -29,6 +29,6 @@ setup(
     classifiers=[
         "Intended Audience :: Science/Research",
         "Topic :: Scientific/Engineering",
-        "License :: OSI Approved :: GNU General Public License, version 3.0",
+        "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
         "Programming Language :: Python :: 3.x"],
 )
